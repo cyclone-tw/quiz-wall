@@ -1,0 +1,37 @@
+[
+    {
+        "id": "demo-quiz-1",
+        "title": "Demo Quiz: General Knowledge",
+        "createdAt": "2023-10-27T10:00:00.000Z",
+        "questions": [
+            {
+                "id": "q1",
+                "type": "multiple-choice",
+                "question": "What is the capital of France?",
+                "options": [
+                    {
+                        "id": "o1",
+                        "text": "London",
+                        "isCorrect": false
+                    },
+                    {
+                        "id": "o2",
+                        "text": "Berlin",
+                        "isCorrect": false
+                    },
+                    {
+                        "id": "o3",
+                        "text": "Paris",
+                        "isCorrect": true
+                    },
+                    {
+                        "id": "o4",
+                        "text": "Madrid",
+                        "isCorrect": false
+                    }
+                ],
+                "media": null
+            }
+        ]
+    }
+]
