@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import QuizList from './components/Dashboard/QuizList'
 import QuizEditor from './components/Editor/QuizEditor'
 import GamePlayer from './components/Player/GamePlayer'
