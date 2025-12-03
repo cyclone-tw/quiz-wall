@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuiz } from '../../context/QuizContext';
-import { ArrowLeft, RefreshCw, Trophy } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Trophy, Download, Check, X } from 'lucide-react';
+import html2canvas from 'html2canvas';
 
 export default function GamePlayer({ quizId, onExit }) {
     const { getQuiz } = useQuiz();
@@ -10,6 +11,8 @@ export default function GamePlayer({ quizId, onExit }) {
     const [gameState, setGameState] = useState('loading'); // loading, playing, feedback, finished
     const [selectedOption, setSelectedOption] = useState(null);
     const [isCorrect, setIsCorrect] = useState(null);
+    const [userAnswers, setUserAnswers] = useState([]); // Store history: { questionId, isCorrect, selectedOptionIndex }
+    const resultRef = useRef(null);
 
     useEffect(() => {
         if (quizId) {
@@ -36,6 +39,12 @@ export default function GamePlayer({ quizId, onExit }) {
             setScore(score + 1);
         }
 
+        setUserAnswers(prev => [...prev, {
+            questionId: currentQuestion.id,
+            isCorrect: correct,
+            selectedOptionIndex: optionIndex
+        }]);
+
         // Auto advance after delay
         setTimeout(() => {
             if (currentQuestionIndex < quiz.questions.length - 1) {
@@ -55,6 +64,22 @@ export default function GamePlayer({ quizId, onExit }) {
         setGameState('playing');
         setSelectedOption(null);
         setIsCorrect(null);
+        setUserAnswers([]);
+    };
+
+    const handleDownloadResult = async () => {
+        if (resultRef.current) {
+            try {
+                const canvas = await html2canvas(resultRef.current);
+                const url = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `quiz-result-${new Date().getTime()}.png`;
+                link.click();
+            } catch (error) {
+                console.error('Download failed:', error);
+            }
+        }
     };
 
     if (!quiz) return <div>Loading...</div>;
@@ -62,16 +87,41 @@ export default function GamePlayer({ quizId, onExit }) {
     if (gameState === 'finished') {
         return (
             <div className="animate-fade-in" style={{ textAlign: 'center', padding: '2rem' }}>
-                <div className="card" style={{ maxWidth: '500px', margin: '0 auto', padding: '3rem 2rem' }}>
+                <div ref={resultRef} className="card" style={{ maxWidth: '600px', margin: '0 auto', padding: '3rem 2rem', background: 'white' }}>
                     <Trophy size={64} style={{ color: 'var(--warning)', marginBottom: '1rem' }} />
                     <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Quiz Completed!</h2>
                     <p style={{ fontSize: '1.5rem', marginBottom: '2rem' }}>
                         You scored <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>{score}</span> out of {quiz.questions.length}
                     </p>
 
-                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                    <div style={{ textAlign: 'left', marginBottom: '2rem', maxHeight: '300px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '1rem' }}>
+                        <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>Detailed Results</h3>
+                        {quiz.questions.map((q, index) => {
+                            const answer = userAnswers.find(a => a.questionId === q.id);
+                            const isCorrect = answer?.isCorrect;
+                            return (
+                                <div key={q.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                                    <div style={{
+                                        width: '24px', height: '24px', borderRadius: '50%',
+                                        background: isCorrect ? 'var(--success)' : 'var(--error)',
+                                        color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                                    }}>
+                                        {isCorrect ? <Check size={14} /> : <X size={14} />}
+                                    </div>
+                                    <div style={{ flex: 1, fontSize: '0.9rem' }}>
+                                        <span style={{ fontWeight: 'bold' }}>Q{index + 1}:</span> {q.question}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
                         <button className="btn btn-primary" onClick={restartGame}>
                             <RefreshCw size={18} /> Play Again
+                        </button>
+                        <button className="btn btn-secondary" onClick={handleDownloadResult}>
+                            <Download size={18} /> Download Result
                         </button>
                         <button className="btn btn-secondary" onClick={onExit}>
                             <ArrowLeft size={18} /> Back to Menu

@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuiz } from '../../context/QuizContext';
-import { Plus, Trash2, Save, ArrowLeft, CheckCircle, Circle } from 'lucide-react';
+import { Plus, Trash2, Save, ArrowLeft, CheckCircle, Circle, Upload } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import MediaUploader from './MediaUploader';
+import Papa from 'papaparse';
 
 export default function QuizEditor({ quizId, onSave, onCancel }) {
     const { getQuiz, addQuiz, updateQuiz } = useQuiz();
@@ -122,6 +123,76 @@ export default function QuizEditor({ quizId, onSave, onCancel }) {
         onSave();
     };
 
+    const handleCSVImport = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: (results) => {
+                try {
+                    const parsedQuestions = results.data.map(row => {
+                        // Expected columns: Question, Option 1, Option 2, Option 3, Option 4, Correct Answer (1-4), Image URL, Audio URL
+                        // Flexible matching for headers
+                        const qText = row['Question'] || row['question'] || '';
+                        if (!qText) return null;
+
+                        const options = [];
+                        for (let i = 1; i <= 6; i++) {
+                            const optText = row[`Option ${i}`] || row[`option ${i}`] || row[`Option${i}`];
+                            if (optText) {
+                                options.push({
+                                    id: uuidv4(),
+                                    text: optText,
+                                    isCorrect: false,
+                                    media: null
+                                });
+                            }
+                        }
+
+                        // Handle Correct Answer
+                        const correctIndex = parseInt(row['Correct Answer'] || row['correct answer'] || row['Correct'] || '1') - 1;
+                        if (options[correctIndex]) {
+                            options[correctIndex].isCorrect = true;
+                        } else if (options.length > 0) {
+                            options[0].isCorrect = true; // Fallback
+                        }
+
+                        // Handle Media
+                        let media = null;
+                        const imgUrl = row['Image URL'] || row['image url'] || row['Image'];
+                        const audioUrl = row['Audio URL'] || row['audio url'] || row['Audio'];
+
+                        if (imgUrl) media = { type: 'image', url: imgUrl };
+                        else if (audioUrl) media = { type: 'audio', url: audioUrl };
+
+                        return {
+                            id: uuidv4(),
+                            type: 'multiple-choice',
+                            question: qText,
+                            options: options.length >= 2 ? options : [
+                                ...options,
+                                { id: uuidv4(), text: 'Option 2', isCorrect: false, media: null }
+                            ],
+                            media: media
+                        };
+                    }).filter(q => q !== null);
+
+                    if (parsedQuestions.length > 0) {
+                        setQuestions(prev => [...prev, ...parsedQuestions]);
+                        alert(`Imported ${parsedQuestions.length} questions!`);
+                    } else {
+                        alert('No valid questions found in CSV.');
+                    }
+                } catch (error) {
+                    console.error('CSV Import Error:', error);
+                    alert('Error parsing CSV. Please check the format.');
+                }
+            }
+        });
+    };
+
     return (
         <div className="animate-fade-in" style={{ maxWidth: '800px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
@@ -129,9 +200,15 @@ export default function QuizEditor({ quizId, onSave, onCancel }) {
                     <ArrowLeft size={16} /> Back
                 </button>
                 <h2 style={{ fontSize: '1.5rem', fontWeight: '600' }}>{quizId ? 'Edit Quiz' : 'Create New Quiz'}</h2>
-                <button className="btn btn-primary" onClick={handleSave}>
-                    <Save size={16} /> Save Quiz
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <label className="btn btn-secondary" style={{ cursor: 'pointer' }}>
+                        <Upload size={16} /> Import CSV
+                        <input type="file" accept=".csv" style={{ display: 'none' }} onChange={handleCSVImport} />
+                    </label>
+                    <button className="btn btn-primary" onClick={handleSave}>
+                        <Save size={16} /> Save Quiz
+                    </button>
+                </div>
             </div>
 
             <div className="card" style={{ marginBottom: '2rem' }}>
