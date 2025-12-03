@@ -12,8 +12,8 @@ const firebaseConfig = {
     projectId: "quiz-wall-db",
     storageBucket: "quiz-wall-db.firebasestorage.app",
     messagingSenderId: "699231447306",
-    appId: "1:699231447306:web:d067574a808527c0f032f3",
-    measurementId: "G-F8V3Y2LL3T"
+    appId: "1:699231447306:web:0a59b3da0f931c5ef032f3",
+    measurementId: "G-449R82C0LJ"
 };
 
 // Initialize Firebase
