@@ -21,6 +21,8 @@
   **詳細成績單**：查看每一題的完整答題狀況，包含題目圖片與所有選項細節。
 - **QR Code Share**: Generate a persistent QR code for easy sharing in classrooms or events.
   **QR Code 分享**：產生可永久使用的 QR Code，方便在教室或活動中分享。
+- **Dark Mode**: Switch between light and dark themes for comfortable viewing.
+  **深色模式**：可切換亮色/深色主題，提供舒適的視覺體驗。
 - **Offline Capable**: Quizzes are saved in your browser's LocalStorage.
   **離線支援**：測驗資料儲存在瀏覽器的 LocalStorage 中。
 
