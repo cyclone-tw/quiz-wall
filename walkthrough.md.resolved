@@ -1,0 +1,39 @@
+# QuizWall - 應用程式導覽 (v2)
+
+恭喜！您的 Wordwall 風格測驗應用程式已經升級，現在支援多媒體與 GitHub 部署。
+
+## 新增功能
+
+### 1. 多媒體支援 (圖片與音效)
+- 在編輯器中，每個問題和選項旁邊都有 **"Img/Audio"** 按鈕。
+- **URL 模式**：貼上圖片 (`.jpg`, `.png`) 或音效 (`.mp3`) 的網址。推薦使用此方式以節省空間。
+- **上傳模式**：上傳 500KB 以下的小型圖片或音效檔。
+
+### 2. GitHub 部署與題庫保存
+- **匯出題庫**：在儀表板點擊 **"Export Quizzes"**，會下載一個 `my-quizzes.json` 檔案。
+- **永久保存**：將下載的 `my-quizzes.json` 重新命名為 `default-quizzes.json`，並放入專案的 `public/` 資料夾中。這樣當您將網站上傳到 GitHub 時，這些題目就會自動載入！
+
+## 如何部署到 GitHub Pages
+
+1.  **建立 GitHub Repository**：在 GitHub 上建立一個新的 Repository。
+2.  **推送程式碼**：
+    ```bash
+    git init
+    git add .
+    git commit -m "Initial commit"
+    git branch -M main
+    git remote add origin <您的 GitHub Repository 網址>
+    git push -u origin main
+    ```
+3.  **部署網站**：
+    ```bash
+    npm run deploy
+    ```
+4.  **完成**：部署完成後，終端機通常會顯示 `Published`。您的網站將會在 `https://<您的帳號>.github.io/<專案名稱>/` 上線。
+
+## 開發指令
+
+啟動開發伺服器：
+```bash
+npm run dev
+```
