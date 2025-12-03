@@ -5,6 +5,7 @@ export default function MediaUploader({ media, onUpdate, label = "Add Media" }) 
     const [isOpen, setIsOpen] = useState(false);
     const [inputType, setInputType] = useState('url'); // 'url' or 'file'
     const [urlInput, setUrlInput] = useState('');
+    const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef(null);
 
     const handleUrlSubmit = () => {
@@ -20,24 +21,100 @@ export default function MediaUploader({ media, onUpdate, label = "Add Media" }) 
         setUrlInput('');
     };
 
-    const handleFileUpload = (e) => {
-        const file = e.target.files[0];
+    const compressImage = (file) => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new window.Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800;
+                    const MAX_HEIGHT = 800;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Compress to JPEG with 0.7 quality
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    resolve(dataUrl);
+                };
+            };
+        });
+    };
+
+    const processFile = async (file) => {
         if (!file) return;
 
-        if (file.size > 500 * 1024) { // 500KB limit
-            alert('File is too large! Please use a URL or a file smaller than 500KB.');
+        // 1MB limit check (1024 * 1024 bytes)
+        if (file.size > 1024 * 1024) {
+            alert('File is too large! Please use a file smaller than 1MB.');
             return;
         }
 
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            onUpdate({
-                type: file.type.startsWith('audio') ? 'audio' : 'image',
-                url: reader.result
-            });
-            setIsOpen(false);
-        };
-        reader.readAsDataURL(file);
+        if (file.type.startsWith('image')) {
+            try {
+                const compressedDataUrl = await compressImage(file);
+                onUpdate({
+                    type: 'image',
+                    url: compressedDataUrl
+                });
+                setIsOpen(false);
+            } catch (error) {
+                console.error("Compression failed", error);
+                alert("Failed to process image.");
+            }
+        } else if (file.type.startsWith('audio')) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                onUpdate({
+                    type: 'audio',
+                    url: reader.result
+                });
+                setIsOpen(false);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleFileUpload = (e) => {
+        processFile(e.target.files[0]);
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            processFile(file);
+        }
     };
 
     const removeMedia = () => {
@@ -88,6 +165,9 @@ export default function MediaUploader({ media, onUpdate, label = "Add Media" }) 
                     className="btn btn-secondary"
                     style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem' }}
                     onClick={() => setIsOpen(true)}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
                 >
                     <Image size={14} /> / <Music size={14} /> {label}
                 </button>
@@ -130,17 +210,36 @@ export default function MediaUploader({ media, onUpdate, label = "Add Media" }) 
                             <button className="btn btn-primary" onClick={handleUrlSubmit}>Add</button>
                         </div>
                     ) : (
-                        <div>
+                        <div
+                            onDragOver={handleDragOver}
+                            onDragLeave={handleDragLeave}
+                            onDrop={handleDrop}
+                            style={{
+                                border: `2px dashed ${isDragging ? 'var(--primary)' : 'var(--border)'}`,
+                                borderRadius: 'var(--radius-md)',
+                                padding: '1.5rem',
+                                textAlign: 'center',
+                                background: isDragging ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                                transition: 'all 0.2s'
+                            }}
+                        >
                             <input
                                 type="file"
                                 accept="image/*,audio/*"
                                 onChange={handleFileUpload}
                                 ref={fileInputRef}
-                                style={{ width: '100%' }}
+                                style={{ display: 'none' }}
+                                id="file-upload"
                             />
-                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                                Max size: 500KB. For larger files, please use URL.
-                            </p>
+                            <label htmlFor="file-upload" style={{ cursor: 'pointer', display: 'block' }}>
+                                <Upload size={24} style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }} />
+                                <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', marginBottom: '0.25rem' }}>
+                                    Click to upload or drag & drop
+                                </p>
+                                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                    Max size: 1MB (Images will be compressed)
+                                </p>
+                            </label>
                         </div>
                     )}
 
