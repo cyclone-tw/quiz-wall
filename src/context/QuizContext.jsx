@@ -1,5 +1,15 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import {
+    collection,
+    addDoc,
+    deleteDoc,
+    updateDoc,
+    doc,
+    onSnapshot,
+    query,
+    orderBy
+} from 'firebase/firestore';
+import { db } from '../firebase';
 
 const QuizContext = createContext();
 
@@ -8,53 +18,53 @@ export function useQuiz() {
 }
 
 export function QuizProvider({ children }) {
-    const [quizzes, setQuizzes] = useState(() => {
-        const saved = localStorage.getItem('quizwall-data');
-        return saved ? JSON.parse(saved) : [];
-    });
+    const [quizzes, setQuizzes] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Load static data if empty or just to merge (optional strategy: merge unique IDs)
-        const loadStaticData = async () => {
-            try {
-                const response = await fetch('./default-quizzes.json');
-                if (response.ok) {
-                    const staticQuizzes = await response.json();
-                    setQuizzes(prev => {
-                        // Merge static quizzes, avoiding duplicates by ID
-                        const existingIds = new Set(prev.map(q => q.id));
-                        const newQuizzes = staticQuizzes.filter(q => !existingIds.has(q.id));
-                        return [...prev, ...newQuizzes];
-                    });
-                }
-            } catch (error) {
-                console.log('No static quizzes found or error loading');
-            }
-        };
-        loadStaticData();
+        // Real-time listener for quizzes collection
+        const q = query(collection(db, "quizzes"), orderBy("createdAt", "desc"));
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const quizzesData = [];
+            querySnapshot.forEach((doc) => {
+                quizzesData.push({ id: doc.id, ...doc.data() });
+            });
+            setQuizzes(quizzesData);
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching quizzes: ", error);
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
     }, []);
 
-    useEffect(() => {
-        localStorage.setItem('quizwall-data', JSON.stringify(quizzes));
-    }, [quizzes]);
-
-    const addQuiz = (quizData) => {
-        const newQuiz = {
-            id: uuidv4(),
-            createdAt: new Date().toISOString(),
-            ...quizData,
-        };
-        setQuizzes((prev) => [newQuiz, ...prev]);
+    const addQuiz = async (quizData) => {
+        try {
+            await addDoc(collection(db, "quizzes"), {
+                ...quizData,
+                createdAt: new Date().toISOString()
+            });
+        } catch (e) {
+            console.error("Error adding document: ", e);
+        }
     };
 
-    const deleteQuiz = (id) => {
-        setQuizzes((prev) => prev.filter((q) => q.id !== id));
+    const deleteQuiz = async (id) => {
+        try {
+            await deleteDoc(doc(db, "quizzes", id));
+        } catch (e) {
+            console.error("Error deleting document: ", e);
+        }
     };
 
-    const updateQuiz = (id, updatedData) => {
-        setQuizzes((prev) =>
-            prev.map((q) => (q.id === id ? { ...q, ...updatedData } : q))
-        );
+    const updateQuiz = async (id, updatedData) => {
+        try {
+            const quizRef = doc(db, "quizzes", id);
+            await updateDoc(quizRef, updatedData);
+        } catch (e) {
+            console.error("Error updating document: ", e);
+        }
     };
 
     const getQuiz = (id) => {
@@ -74,7 +84,7 @@ export function QuizProvider({ children }) {
     };
 
     return (
-        <QuizContext.Provider value={{ quizzes, addQuiz, deleteQuiz, updateQuiz, getQuiz, exportQuizzes }}>
+        <QuizContext.Provider value={{ quizzes, addQuiz, deleteQuiz, updateQuiz, getQuiz, exportQuizzes, loading }}>
             {children}
         </QuizContext.Provider>
     );
