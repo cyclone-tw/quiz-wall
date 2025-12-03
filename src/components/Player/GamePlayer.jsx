@@ -168,7 +168,7 @@ export default function GamePlayer({ quizId, onExit }) {
                                             {q.options.map((opt, optIndex) => {
                                                 let bgColor = 'var(--surface)';
                                                 let borderColor = 'var(--border)';
-                                                let textColor = 'var(--text)';
+                                                let textColor = 'var(--text-main)';
 
                                                 if (opt.isCorrect) {
                                                     bgColor = 'rgba(34, 197, 94, 0.1)';
@@ -267,6 +267,7 @@ export default function GamePlayer({ quizId, onExit }) {
                             border: '2px solid var(--border)',
                             borderRadius: 'var(--radius-lg)',
                             background: 'var(--bg-card)',
+                            color: 'var(--text-main)',
                             cursor: 'pointer',
                             transition: 'all 0.2s',
                         };
