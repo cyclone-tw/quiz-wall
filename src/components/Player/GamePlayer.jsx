@@ -8,10 +8,12 @@ export default function GamePlayer({ quizId, onExit }) {
     const [quiz, setQuiz] = useState(null);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [score, setScore] = useState(0);
-    const [gameState, setGameState] = useState('loading'); // loading, playing, feedback, finished
+    const [gameState, setGameState] = useState('loading'); // loading, setup, playing, feedback, finished
     const [selectedOption, setSelectedOption] = useState(null);
     const [isCorrect, setIsCorrect] = useState(null);
     const [userAnswers, setUserAnswers] = useState([]); // Store history: { questionId, isCorrect, selectedOptionIndex }
+    const [isRandomized, setIsRandomized] = useState(false);
+    const [playingQuestions, setPlayingQuestions] = useState([]);
     const resultRef = useRef(null);
 
     useEffect(() => {
@@ -47,21 +49,21 @@ export default function GamePlayer({ quizId, onExit }) {
 
         // Auto advance after delay
         setTimeout(() => {
-            if (currentQuestionIndex < quiz.questions.length - 1) {
-                setCurrentQuestionIndex(prev => prev + 1);
+            if (currentQuestionIndex < playingQuestions.length - 1) {
+                setCurrentQuestionIndex(currentQuestionIndex + 1);
                 setGameState('playing');
                 setSelectedOption(null);
                 setIsCorrect(null);
             } else {
                 setGameState('finished');
             }
-        }, 1500);
+        }, 2000); // 2 seconds feedback
     };
 
     const restartGame = () => {
         setCurrentQuestionIndex(0);
         setScore(0);
-        setGameState('playing');
+        setGameState('setup');
         setSelectedOption(null);
         setIsCorrect(null);
         setUserAnswers([]);
@@ -84,32 +86,113 @@ export default function GamePlayer({ quizId, onExit }) {
 
     if (!quiz) return <div>Loading...</div>;
 
+    if (gameState === 'setup') {
+        return (
+            <div className="animate-fade-in" style={{ textAlign: 'center', padding: '2rem' }}>
+                <div className="card" style={{ maxWidth: '500px', margin: '0 auto', padding: '3rem 2rem' }}>
+                    <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>{quiz.title}</h2>
+                    <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>
+                        {quiz.questions.length} Questions
+                    </p>
+
+                    <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                        <input
+                            type="checkbox"
+                            id="randomize"
+                            checked={isRandomized}
+                            onChange={(e) => setIsRandomized(e.target.checked)}
+                            style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                        />
+                        <label htmlFor="randomize" style={{ fontSize: '1.1rem', cursor: 'pointer' }}>Randomize Question Order</label>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                        <button className="btn btn-primary" onClick={startGame} style={{ padding: '0.75rem 2rem', fontSize: '1.2rem' }}>
+                            Start Quiz
+                        </button>
+                        <button className="btn btn-secondary" onClick={onExit}>
+                            <ArrowLeft size={18} /> Back
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     if (gameState === 'finished') {
         return (
             <div className="animate-fade-in" style={{ textAlign: 'center', padding: '2rem' }}>
-                <div ref={resultRef} className="card" style={{ maxWidth: '600px', margin: '0 auto', padding: '3rem 2rem', background: 'white' }}>
+                <div ref={resultRef} className="card" style={{ maxWidth: '800px', margin: '0 auto', padding: '3rem 2rem', background: 'white' }}>
                     <Trophy size={64} style={{ color: 'var(--warning)', marginBottom: '1rem' }} />
                     <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Quiz Completed!</h2>
                     <p style={{ fontSize: '1.5rem', marginBottom: '2rem' }}>
-                        You scored <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>{score}</span> out of {quiz.questions.length}
+                        You scored <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>{score}</span> out of {playingQuestions.length}
                     </p>
 
-                    <div style={{ textAlign: 'left', marginBottom: '2rem', maxHeight: '300px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '1rem' }}>
+                    <div style={{ textAlign: 'left', marginBottom: '2rem', maxHeight: '500px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '1rem' }}>
                         <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>Detailed Results</h3>
-                        {quiz.questions.map((q, index) => {
+                        {playingQuestions.map((q, index) => {
                             const answer = userAnswers.find(a => a.questionId === q.id);
                             const isCorrect = answer?.isCorrect;
+                            const selectedIndex = answer?.selectedOptionIndex;
+
                             return (
-                                <div key={q.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                                    <div style={{
-                                        width: '24px', height: '24px', borderRadius: '50%',
-                                        background: isCorrect ? 'var(--success)' : 'var(--error)',
-                                        color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-                                    }}>
-                                        {isCorrect ? <Check size={14} /> : <X size={14} />}
+                                <div key={q.id} style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                        <div style={{
+                                            width: '24px', height: '24px', borderRadius: '50%',
+                                            background: isCorrect ? 'var(--success)' : 'var(--error)',
+                                            color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                                        }}>
+                                            {isCorrect ? <Check size={14} /> : <X size={14} />}
+                                        </div>
+                                        <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>Question {index + 1}</span>
                                     </div>
-                                    <div style={{ flex: 1, fontSize: '0.9rem' }}>
-                                        <span style={{ fontWeight: 'bold' }}>Q{index + 1}:</span> {q.question}
+
+                                    <div style={{ marginLeft: '2rem' }}>
+                                        <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>{q.question}</p>
+                                        {q.media && q.media.type === 'image' && (
+                                            <img src={q.media.url} alt="Question" style={{ maxWidth: '200px', maxHeight: '150px', borderRadius: '8px', marginBottom: '0.5rem', objectFit: 'cover' }} />
+                                        )}
+
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                            {q.options.map((opt, optIndex) => {
+                                                let bgColor = 'var(--surface)';
+                                                let borderColor = 'var(--border)';
+                                                let textColor = 'var(--text)';
+
+                                                if (opt.isCorrect) {
+                                                    bgColor = 'rgba(34, 197, 94, 0.1)';
+                                                    borderColor = 'var(--success)';
+                                                    textColor = 'var(--success)';
+                                                } else if (selectedIndex === optIndex && !isCorrect) {
+                                                    bgColor = 'rgba(239, 68, 68, 0.1)';
+                                                    borderColor = 'var(--error)';
+                                                    textColor = 'var(--error)';
+                                                }
+
+                                                return (
+                                                    <div key={opt.id} style={{
+                                                        padding: '0.5rem',
+                                                        border: `1px solid ${borderColor}`,
+                                                        borderRadius: 'var(--radius-sm)',
+                                                        background: bgColor,
+                                                        color: textColor,
+                                                        fontSize: '0.9rem',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '0.5rem'
+                                                    }}>
+                                                        {opt.media && opt.media.type === 'image' && (
+                                                            <img src={opt.media.url} alt="Option" style={{ width: '30px', height: '30px', objectFit: 'cover', borderRadius: '4px' }} />
+                                                        )}
+                                                        <span>{opt.text}</span>
+                                                        {opt.isCorrect && <Check size={14} style={{ marginLeft: 'auto' }} />}
+                                                        {selectedIndex === optIndex && !isCorrect && <X size={14} style={{ marginLeft: 'auto' }} />}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 </div>
                             );
@@ -132,7 +215,7 @@ export default function GamePlayer({ quizId, onExit }) {
         );
     }
 
-    const currentQuestion = quiz.questions[currentQuestionIndex];
+    const currentQuestion = playingQuestions[currentQuestionIndex];
 
     return (
         <div className="animate-fade-in" style={{ maxWidth: '800px', margin: '0 auto' }}>

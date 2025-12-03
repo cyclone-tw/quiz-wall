@@ -15,8 +15,10 @@
   **多媒體支援**：可透過網址或上傳方式，為題目與選項加入圖片及音效。
 - **Batch Import**: Create quizzes quickly by importing CSV files (template provided).
   **批次匯入**：支援匯入 CSV 檔案快速建立題庫 (提供範例檔)。
-- **Detailed Results**: View question-by-question breakdown and download result cards as images.
-  **詳細成績單**：查看每一題的答題狀況，並可將成績單下載為圖片。
+- **Randomize Questions**: Option to shuffle question order before starting the quiz.
+  **隨機出題**：開始測驗前可選擇隨機打亂題目順序。
+- **Detailed Results**: View question-by-question breakdown with images and full option details.
+  **詳細成績單**：查看每一題的完整答題狀況，包含題目圖片與所有選項細節。
 - **QR Code Share**: Generate a persistent QR code for easy sharing in classrooms or events.
   **QR Code 分享**：產生可永久使用的 QR Code，方便在教室或活動中分享。
 - **Offline Capable**: Quizzes are saved in your browser's LocalStorage.
