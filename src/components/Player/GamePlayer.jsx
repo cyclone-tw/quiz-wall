@@ -20,12 +20,21 @@ export default function GamePlayer({ quizId, onExit }) {
         if (quizId) {
             const q = getQuiz(quizId);
             if (q) {
-                // Shuffle questions or options could go here
                 setQuiz(q);
-                setGameState('playing');
+                setPlayingQuestions(q.questions);
+                setGameState('setup');
             }
         }
-    }, [quizId]);
+    }, [quizId, getQuiz]);
+
+    const startGame = () => {
+        let questionsToPlay = [...quiz.questions];
+        if (isRandomized) {
+            questionsToPlay = questionsToPlay.sort(() => Math.random() - 0.5);
+        }
+        setPlayingQuestions(questionsToPlay);
+        setGameState('playing');
+    };
 
     const handleAnswer = (optionIndex) => {
         if (gameState !== 'playing') return;
@@ -216,6 +225,7 @@ export default function GamePlayer({ quizId, onExit }) {
     }
 
     const currentQuestion = playingQuestions[currentQuestionIndex];
+    if (!currentQuestion) return null;
 
     return (
         <div className="animate-fade-in" style={{ maxWidth: '800px', margin: '0 auto' }}>
