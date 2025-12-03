@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuiz } from '../../context/QuizContext';
-import { Plus, Trash2, Save, ArrowLeft, CheckCircle, Circle, Upload } from 'lucide-react';
+import { Plus, Trash2, Save, ArrowLeft, CheckCircle, Circle, Upload, FileDown } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import MediaUploader from './MediaUploader';
 import Papa from 'papaparse';
@@ -201,6 +201,14 @@ export default function QuizEditor({ quizId, onSave, onCancel }) {
                 </button>
                 <h2 style={{ fontSize: '1.5rem', fontWeight: '600' }}>{quizId ? 'Edit Quiz' : 'Create New Quiz'}</h2>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <a
+                        href="./template.csv"
+                        download="quiz-template.csv"
+                        className="btn btn-secondary"
+                        style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    >
+                        <FileDown size={16} /> Template
+                    </a>
                     <label className="btn btn-secondary" style={{ cursor: 'pointer' }}>
                         <Upload size={16} /> Import CSV
                         <input type="file" accept=".csv" style={{ display: 'none' }} onChange={handleCSVImport} />
