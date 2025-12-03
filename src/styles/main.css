@@ -41,6 +41,12 @@
 
   /* Typography */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Feedback Backgrounds (Light Mode) */
+  --bg-feedback-success: #dcfce7;
+  --bg-feedback-error: #fee2e2;
+  --text-feedback-success: #15803d;
+  --text-feedback-error: #b91c1c;
 }
 
 [data-theme='dark'] {
@@ -56,6 +62,12 @@
   /* Slate 700 */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+
+  /* Feedback Backgrounds (Dark Mode) */
+  --bg-feedback-success: rgba(34, 197, 94, 0.3);
+  --bg-feedback-error: rgba(239, 68, 68, 0.3);
+  --text-feedback-success: #ffffff;
+  --text-feedback-error: #ffffff;
 }
 
 * {

@@ -131,7 +131,7 @@ export default function GamePlayer({ quizId, onExit }) {
     if (gameState === 'finished') {
         return (
             <div className="animate-fade-in" style={{ textAlign: 'center', padding: '2rem' }}>
-                <div ref={resultRef} className="card" style={{ maxWidth: '800px', margin: '0 auto', padding: '3rem 2rem', background: 'white' }}>
+                <div ref={resultRef} className="card" style={{ maxWidth: '800px', margin: '0 auto', padding: '3rem 2rem', background: 'var(--bg-card)' }}>
                     <Trophy size={64} style={{ color: 'var(--warning)', marginBottom: '1rem' }} />
                     <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Quiz Completed!</h2>
                     <p style={{ fontSize: '1.5rem', marginBottom: '2rem' }}>
@@ -275,11 +275,13 @@ export default function GamePlayer({ quizId, onExit }) {
                         if (gameState === 'feedback') {
                             if (index === selectedOption) {
                                 style.borderColor = isCorrect ? 'var(--success)' : 'var(--error)';
-                                style.background = isCorrect ? '#dcfce7' : '#fee2e2';
+                                style.background = isCorrect ? 'var(--bg-feedback-success)' : 'var(--bg-feedback-error)';
+                                style.color = isCorrect ? 'var(--text-feedback-success)' : 'var(--text-feedback-error)';
                             } else if (opt.isCorrect && !isCorrect) {
                                 // Show correct answer if wrong was selected
                                 style.borderColor = 'var(--success)';
-                                style.background = '#dcfce7';
+                                style.background = 'var(--bg-feedback-success)';
+                                style.color = 'var(--text-feedback-success)';
                             } else {
                                 style.opacity = 0.5;
                             }
