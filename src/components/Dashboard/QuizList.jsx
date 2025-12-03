@@ -1,8 +1,25 @@
+import { useState } from 'react';
 import { useQuiz } from '../../context/QuizContext';
-import { Trash2, Play, Edit, Download } from 'lucide-react';
+import { Trash2, Play, Edit, Download, Copy, AlertTriangle } from 'lucide-react';
 
 export default function QuizList({ onCreate, onPlay, onEdit }) {
-    const { quizzes, deleteQuiz, exportQuizzes } = useQuiz();
+    const { quizzes, deleteQuiz, duplicateQuiz, exportQuizzes } = useQuiz();
+    const [deleteId, setDeleteId] = useState(null);
+
+    const handleDeleteClick = (id) => {
+        setDeleteId(id);
+    };
+
+    const confirmDelete = () => {
+        if (deleteId) {
+            deleteQuiz(deleteId);
+            setDeleteId(null);
+        }
+    };
+
+    const cancelDelete = () => {
+        setDeleteId(null);
+    };
 
     if (quizzes.length === 0) {
         return (
@@ -53,16 +70,26 @@ export default function QuizList({ onCreate, onPlay, onEdit }) {
                             </button>
                             <button
                                 className="btn btn-secondary"
+                                onClick={() => duplicateQuiz(quiz.id)}
+                                aria-label="Duplicate"
+                                title="Duplicate Quiz"
+                            >
+                                <Copy size={16} />
+                            </button>
+                            <button
+                                className="btn btn-secondary"
                                 onClick={() => onEdit(quiz.id)}
                                 aria-label="Edit"
+                                title="Edit Quiz"
                             >
                                 <Edit size={16} />
                             </button>
                             <button
                                 className="btn btn-secondary"
                                 style={{ color: 'var(--error)', borderColor: 'var(--error)' }}
-                                onClick={() => deleteQuiz(quiz.id)}
+                                onClick={() => handleDeleteClick(quiz.id)}
                                 aria-label="Delete"
+                                title="Delete Quiz"
                             >
                                 <Trash2 size={16} />
                             </button>
@@ -70,6 +97,42 @@ export default function QuizList({ onCreate, onPlay, onEdit }) {
                     </div>
                 ))}
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {deleteId && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000
+                }}>
+                    <div className="card" style={{ maxWidth: '400px', width: '90%', padding: '2rem', textAlign: 'center' }}>
+                        <AlertTriangle size={48} style={{ color: 'var(--error)', marginBottom: '1rem' }} />
+                        <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Delete Quiz?</h3>
+                        <p style={{ marginBottom: '2rem', color: 'var(--text-muted)' }}>
+                            Are you sure you want to delete this quiz? This action cannot be undone.
+                        </p>
+                        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                            <button className="btn btn-secondary" onClick={cancelDelete}>
+                                Cancel
+                            </button>
+                            <button
+                                className="btn btn-primary"
+                                style={{ background: 'var(--error)', borderColor: 'var(--error)' }}
+                                onClick={confirmDelete}
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

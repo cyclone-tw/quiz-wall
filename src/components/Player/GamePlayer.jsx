@@ -13,6 +13,7 @@ export default function GamePlayer({ quizId, onExit }) {
     const [isCorrect, setIsCorrect] = useState(null);
     const [userAnswers, setUserAnswers] = useState([]); // Store history: { questionId, isCorrect, selectedOptionIndex }
     const [isRandomized, setIsRandomized] = useState(false);
+    const [isOptionsRandomized, setIsOptionsRandomized] = useState(false);
     const [playingQuestions, setPlayingQuestions] = useState([]);
     const resultRef = useRef(null);
 
@@ -28,10 +29,20 @@ export default function GamePlayer({ quizId, onExit }) {
     }, [quizId, getQuiz]);
 
     const startGame = () => {
-        let questionsToPlay = [...quiz.questions];
+        let questionsToPlay = JSON.parse(JSON.stringify(quiz.questions)); // Deep copy
+
         if (isRandomized) {
             questionsToPlay = questionsToPlay.sort(() => Math.random() - 0.5);
         }
+
+        if (isOptionsRandomized) {
+            questionsToPlay = questionsToPlay.map(q => {
+                // Shuffle options
+                const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+                return { ...q, options: shuffledOptions };
+            });
+        }
+
         setPlayingQuestions(questionsToPlay);
         setGameState('playing');
     };
@@ -39,7 +50,7 @@ export default function GamePlayer({ quizId, onExit }) {
     const handleAnswer = (optionIndex) => {
         if (gameState !== 'playing') return;
 
-        const currentQuestion = quiz.questions[currentQuestionIndex];
+        const currentQuestion = playingQuestions[currentQuestionIndex];
         const correct = currentQuestion.options[optionIndex].isCorrect;
 
         setSelectedOption(optionIndex);
@@ -104,15 +115,27 @@ export default function GamePlayer({ quizId, onExit }) {
                         {quiz.questions.length} Questions
                     </p>
 
-                    <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                        <input
-                            type="checkbox"
-                            id="randomize"
-                            checked={isRandomized}
-                            onChange={(e) => setIsRandomized(e.target.checked)}
-                            style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                        />
-                        <label htmlFor="randomize" style={{ fontSize: '1.1rem', cursor: 'pointer' }}>Randomize Question Order</label>
+                    <div style={{ marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <input
+                                type="checkbox"
+                                id="randomize"
+                                checked={isRandomized}
+                                onChange={(e) => setIsRandomized(e.target.checked)}
+                                style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                            />
+                            <label htmlFor="randomize" style={{ fontSize: '1.1rem', cursor: 'pointer' }}>Randomize Question Order</label>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <input
+                                type="checkbox"
+                                id="randomizeOptions"
+                                checked={isOptionsRandomized}
+                                onChange={(e) => setIsOptionsRandomized(e.target.checked)}
+                                style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                            />
+                            <label htmlFor="randomizeOptions" style={{ fontSize: '1.1rem', cursor: 'pointer' }}>Randomize Options</label>
+                        </div>
                     </div>
 
                     <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>

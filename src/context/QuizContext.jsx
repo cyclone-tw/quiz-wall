@@ -67,6 +67,24 @@ export function QuizProvider({ children }) {
         }
     };
 
+    const duplicateQuiz = async (id) => {
+        const quizToCopy = quizzes.find(q => q.id === id);
+        if (!quizToCopy) return;
+
+        try {
+            // Create a deep copy and remove the ID so Firestore generates a new one
+            const { id: _, ...quizData } = quizToCopy;
+
+            await addDoc(collection(db, "quizzes"), {
+                ...quizData,
+                title: `${quizData.title} (Copy)`,
+                createdAt: new Date().toISOString()
+            });
+        } catch (e) {
+            console.error("Error duplicating document: ", e);
+        }
+    };
+
     const getQuiz = (id) => {
         return quizzes.find((q) => q.id === id);
     };
@@ -84,7 +102,7 @@ export function QuizProvider({ children }) {
     };
 
     return (
-        <QuizContext.Provider value={{ quizzes, addQuiz, deleteQuiz, updateQuiz, getQuiz, exportQuizzes, loading }}>
+        <QuizContext.Provider value={{ quizzes, addQuiz, deleteQuiz, updateQuiz, duplicateQuiz, getQuiz, exportQuizzes, loading }}>
             {children}
         </QuizContext.Provider>
     );
