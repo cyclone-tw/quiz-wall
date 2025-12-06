@@ -16,6 +16,7 @@ export default function GamePlayer({ quizId, onExit }) {
     const [isOptionsRandomized, setIsOptionsRandomized] = useState(false);
     const [playingQuestions, setPlayingQuestions] = useState([]);
     const resultRef = useRef(null);
+    const listRef = useRef(null);
 
     useEffect(() => {
         if (quizId) {
@@ -90,9 +91,23 @@ export default function GamePlayer({ quizId, onExit }) {
     };
 
     const handleDownloadResult = async () => {
-        if (resultRef.current) {
+        if (resultRef.current && listRef.current) {
+            // Save original styles
+            const originalMaxHeight = listRef.current.style.maxHeight;
+            const originalOverflow = listRef.current.style.overflowY;
+            const originalBorder = listRef.current.style.border;
+
+            // Expand for capture
+            listRef.current.style.maxHeight = 'none';
+            listRef.current.style.overflowY = 'visible';
+            listRef.current.style.border = 'none'; // Optional: remove border for cleaner look in long image
+
             try {
-                const canvas = await html2canvas(resultRef.current);
+                const canvas = await html2canvas(resultRef.current, {
+                    scale: 2, // Better quality
+                    useCORS: true, // Handle images if any
+                    backgroundColor: '#ffffff' // Ensure white background
+                });
                 const url = canvas.toDataURL('image/png');
                 const link = document.createElement('a');
                 link.href = url;
@@ -100,6 +115,11 @@ export default function GamePlayer({ quizId, onExit }) {
                 link.click();
             } catch (error) {
                 console.error('Download failed:', error);
+            } finally {
+                // Restore styles
+                listRef.current.style.maxHeight = originalMaxHeight;
+                listRef.current.style.overflowY = originalOverflow;
+                listRef.current.style.border = originalBorder;
             }
         }
     };
@@ -161,7 +181,7 @@ export default function GamePlayer({ quizId, onExit }) {
                         You scored <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>{score}</span> out of {playingQuestions.length}
                     </p>
 
-                    <div style={{ textAlign: 'left', marginBottom: '2rem', maxHeight: '500px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '1rem' }}>
+                    <div ref={listRef} style={{ textAlign: 'left', marginBottom: '2rem', maxHeight: '500px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '1rem' }}>
                         <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>Detailed Results</h3>
                         {playingQuestions.map((q, index) => {
                             const answer = userAnswers.find(a => a.questionId === q.id);
