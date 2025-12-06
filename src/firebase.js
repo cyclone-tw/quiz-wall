@@ -21,5 +21,9 @@ const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 
 // Initialize Cloud Firestore and get a reference to the service
+// Initialize Cloud Firestore and get a reference to the service
 import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+
 export const db = getFirestore(app);
+export const auth = getAuth(app);

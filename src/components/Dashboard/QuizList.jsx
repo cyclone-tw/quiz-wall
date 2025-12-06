@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useQuiz } from '../../context/QuizContext';
+import { useAuth } from '../../context/AuthContext';
 import { Trash2, Play, Edit, Download, Copy, AlertTriangle } from 'lucide-react';
 
 export default function QuizList({ onCreate, onPlay, onEdit }) {
     const { quizzes, deleteQuiz, duplicateQuiz, exportQuizzes } = useQuiz();
+    const { user } = useAuth();
     const [deleteId, setDeleteId] = useState(null);
 
     const handleDeleteClick = (id) => {
@@ -24,14 +26,16 @@ export default function QuizList({ onCreate, onPlay, onEdit }) {
     if (quizzes.length === 0) {
         return (
             <div style={{ textAlign: 'center', padding: '4rem 2rem', color: 'var(--text-muted)' }}>
-                <p>No quizzes yet. Create your first one!</p>
-                <button
-                    className="btn btn-primary"
-                    style={{ marginTop: '1rem' }}
-                    onClick={onCreate}
-                >
-                    Create New Quiz
-                </button>
+                <p>No quizzes yet. {user ? "Create your first one!" : "Ask your teacher to create one!"}</p>
+                {user && (
+                    <button
+                        className="btn btn-primary"
+                        style={{ marginTop: '1rem' }}
+                        onClick={onCreate}
+                    >
+                        Create New Quiz
+                    </button>
+                )}
             </div>
         );
     }
@@ -68,31 +72,35 @@ export default function QuizList({ onCreate, onPlay, onEdit }) {
                             >
                                 <Play size={16} /> Play
                             </button>
-                            <button
-                                className="btn btn-secondary"
-                                onClick={() => duplicateQuiz(quiz.id)}
-                                aria-label="Duplicate"
-                                title="Duplicate Quiz"
-                            >
-                                <Copy size={16} />
-                            </button>
-                            <button
-                                className="btn btn-secondary"
-                                onClick={() => onEdit(quiz.id)}
-                                aria-label="Edit"
-                                title="Edit Quiz"
-                            >
-                                <Edit size={16} />
-                            </button>
-                            <button
-                                className="btn btn-secondary"
-                                style={{ color: 'var(--error)', borderColor: 'var(--error)' }}
-                                onClick={() => handleDeleteClick(quiz.id)}
-                                aria-label="Delete"
-                                title="Delete Quiz"
-                            >
-                                <Trash2 size={16} />
-                            </button>
+                            {user && (
+                                <>
+                                    <button
+                                        className="btn btn-secondary"
+                                        onClick={() => duplicateQuiz(quiz.id)}
+                                        aria-label="Duplicate"
+                                        title="Duplicate Quiz"
+                                    >
+                                        <Copy size={16} />
+                                    </button>
+                                    <button
+                                        className="btn btn-secondary"
+                                        onClick={() => onEdit(quiz.id)}
+                                        aria-label="Edit"
+                                        title="Edit Quiz"
+                                    >
+                                        <Edit size={16} />
+                                    </button>
+                                    <button
+                                        className="btn btn-secondary"
+                                        style={{ color: 'var(--error)', borderColor: 'var(--error)' }}
+                                        onClick={() => handleDeleteClick(quiz.id)}
+                                        aria-label="Delete"
+                                        title="Delete Quiz"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
                 ))}
