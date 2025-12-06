@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { X, LogIn, UserPlus } from 'lucide-react';
+import { X } from 'lucide-react';
 
 export default function LoginModal({ isOpen, onClose }) {
-    const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const { login, signup } = useAuth();
+    const { login } = useAuth();
     const [loading, setLoading] = useState(false);
 
     if (!isOpen) return null;
@@ -18,14 +17,10 @@ export default function LoginModal({ isOpen, onClose }) {
         setLoading(true);
 
         try {
-            if (isLogin) {
-                await login(email, password);
-            } else {
-                await signup(email, password);
-            }
+            await login(email, password);
             onClose();
         } catch (err) {
-            setError('Failed to ' + (isLogin ? 'log in' : 'sign up') + ': ' + err.message);
+            setError('Failed to log in: ' + err.message);
         }
 
         setLoading(false);
@@ -61,7 +56,7 @@ export default function LoginModal({ isOpen, onClose }) {
                 </button>
 
                 <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem', textAlign: 'center' }}>
-                    {isLogin ? 'Teacher Login' : 'Teacher Signup'}
+                    Teacher Login
                 </h2>
 
                 {error && (
@@ -105,25 +100,13 @@ export default function LoginModal({ isOpen, onClose }) {
                         disabled={loading}
                         style={{ marginTop: '0.5rem' }}
                     >
-                        {loading ? 'Processing...' : (isLogin ? 'Log In' : 'Sign Up')}
+                        {loading ? 'Processing...' : 'Log In'}
                     </button>
                 </form>
 
-                <div style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                    {isLogin ? "Don't have an account? " : "Already have an account? "}
-                    <button
-                        onClick={() => setIsLogin(!isLogin)}
-                        style={{
-                            background: 'none',
-                            border: 'none',
-                            color: 'var(--primary)',
-                            cursor: 'pointer',
-                            textDecoration: 'underline'
-                        }}
-                    >
-                        {isLogin ? 'Sign Up' : 'Log In'}
-                    </button>
-                </div>
+                <p style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                    Don't have an account? Ask an administrator to create one for you.
+                </p>
             </div>
         </div>
     );
